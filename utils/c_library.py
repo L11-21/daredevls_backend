@@ -2,7 +2,7 @@ import ctypes
 import os
 
 # Load your compiled C library
-lib_path = os.path.abspath('./Viable.so')  # Use Viable.dll on Windows
+lib_path = os.path.join(os.path.dirname(__file__), "viable.so") # Use Viable.dll on Windows
 clibrary = ctypes.CDLL(lib_path)
 
 # Define C function interfaces
