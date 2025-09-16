@@ -14,3 +14,9 @@ int meme_score(int rarity, int engagement) {
     }
     return rarity * engagement;
 }
+
+// Sets aeration level (stub for now)
+void set_aeration(int level) {
+    // Placeholder for environmental tuning
+    printf("Aeration level set to %d\n", level);
+}
