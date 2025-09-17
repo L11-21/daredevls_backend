@@ -1,7 +1,10 @@
+import os
+
 import psycopg2
 from flask import Flask, jsonify, render_template, request
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
+from sqlalchemy import create_engine
 
 # 🔌 Import new modular utilities
 from utils.c_library import use_clibrary
@@ -9,22 +12,16 @@ from utils.ml_models import run_ml_models
 from utils.severity import get_dns_severity
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")  # 🔐 Secure session key
 
-# 🗄️ Database connection parameters
-DB_HOST = "localhost"
-DB_NAME = "imagination_portal"
-DB_USER = "postgres"
-DB_PASSWORD = "$9zZ28IQ"
+# 🗄️ SQLAlchemy Engines (for future modular queries)
+engine_primary = create_engine(os.getenv("DATABASE_URL"))
+engine_secondary = create_engine(os.getenv("IMAGINATION_DB_URL"))
 
-# 🧠 Database connection function
+# 🧠 psycopg2 Connection (legacy logic)
 def connect_to_db():
     try:
-        conn = psycopg2.connect(
-            host=DB_HOST,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD
-        )
+        conn = psycopg2.connect(os.getenv("IMAGINATION_DB_URL"))
         return conn
     except psycopg2.Error as e:
         print(f"Error connecting to the database: {e}")
