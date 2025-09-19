@@ -1,24 +1,29 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import os
+import random
 
 import psycopg2
+# 🔌 Modular DB logic
+from db_config import get_db_uri
 from flask import Flask, jsonify, render_template, request
+from models import db
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
-from sqlalchemy import create_engine
-
-# 🔌 Import new modular utilities
+# 🔧 Custom utilities
 from utils.c_library import use_clibrary
 from utils.ml_models import run_ml_models
 from utils.severity import get_dns_severity
 
+# 🚀 Flask app setup
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")  # 🔐 Secure session key
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+app.config['SQLALCHEMY_DATABASE_URI'] = get_db_uri("daredevls")  # or "genai"
+db.init_app(app)
 
-# 🗄️ SQLAlchemy Engines (for future modular queries)
-engine_primary = create_engine(os.getenv("DATABASE_URL"))
-engine_secondary = create_engine(os.getenv("IMAGINATION_DB_URL"))
-
-# 🧠 psycopg2 Connection (legacy logic)
+# 🧠 psycopg2 legacy connection (used in /process_command)
 def connect_to_db():
     try:
         conn = psycopg2.connect(os.getenv("IMAGINATION_DB_URL"))
@@ -60,21 +65,15 @@ def process_command():
                     LIMIT 1;
                 """, (user_command, user_command, user_command))
 
-                if cursor.rowcount > 0:
-                    result = cursor.fetchone()
-                    similar_item = {"item": result[0], "similarity": result[1]}
-                else:
-                    similar_item = {"item": "No match found", "similarity": 0}
+                result = cursor.fetchone() if cursor.rowcount > 0 else None
+                similar_item = {
+                    "item": result[0] if result else "No match found",
+                    "similarity": result[1] if result else 0
+                }
 
-            except psycopg2.Error as e:
-                print(f"Database error: {e}")
-                similar_item = {"item": "Database error", "similarity": -1}
-            except IndexError as e:
-                print(f"IndexError: {e}")
+            except (psycopg2.Error, IndexError, Exception) as e:
+                print(f"Error: {e}")
                 similar_item = {"item": "Query error", "similarity": -1}
-            except Exception as e:
-                print(f"Unexpected error: {e}")
-                similar_item = {"item": "Unexpected error", "similarity": -1}
             finally:
                 cursor.close()
                 close_db_connection(db_connection)
@@ -92,7 +91,6 @@ def create_plane():
     return jsonify(neural_response)
 
 def simulate_neural_network_with_qiskit(plane_name, plane_type):
-    import random
     return {
         "activation_message": f"{plane_name} ({plane_type}) activated!",
         "qiskit_simulation": f"Quantum output: {random.choice(['00', '01', '10', '11'])}",
@@ -124,4 +122,3 @@ def dns_severity():
 # 🚀 Launch app
 if __name__ == '__main__':
     app.run(debug=True)
-
