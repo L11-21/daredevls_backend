@@ -49,7 +49,8 @@ def health_check():
 # 🧠 Qiskit command processor
 @app.route('/process_command', methods=['POST'])
 def process_command():
-    user_command = request.form.get('user_command')
+    data = request.get_json()
+    user_command = data.get('command') if data else None
     print(f"Received command: {user_command}")
 
     if user_command:
@@ -121,4 +122,6 @@ def dns_severity():
 
 # 🚀 Launch app
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
