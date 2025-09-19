@@ -9,6 +9,7 @@ import psycopg2
 # 🔌 Modular DB logic
 from db_config import get_db_uri
 from flask import Flask, jsonify, render_template, request
+from flask_cors import CORS
 from models import db
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
@@ -19,6 +20,7 @@ from utils.severity import get_dns_severity
 
 # 🚀 Flask app setup
 app = Flask(__name__)
+CORS(app)
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = get_db_uri("daredevls")  # or "genai"
 db.init_app(app)
